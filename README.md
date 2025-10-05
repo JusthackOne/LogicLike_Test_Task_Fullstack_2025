@@ -1,5 +1,7 @@
 *LogicLike_Тестовое задание Fullstack*
 
+http://45.9.42.228/ - проверка ОНЛАЙН. Попросил друзей, чтобы поставили пару голосов. Браузер может жаловаться, что сайт незащищенный. НО ВСЁ ХОРОШО! Не бойтесь.
+
 - Backend: Node.js + TypeScript + Express + PostgreSQL
 - Frontend: React + Vite + Tailwind (shadcn‑style UI components)
 - Deploy: Docker + docker-compose
