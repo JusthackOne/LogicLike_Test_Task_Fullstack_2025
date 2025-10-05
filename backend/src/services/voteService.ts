@@ -1,5 +1,13 @@
 import { pool } from '../db/pool.js';
 
+export type IdeaWithFlag = {
+  id: number;
+  title: string;
+  description: string;
+  voteCount: number;
+  hasVoted: boolean;
+};
+
 export class ConflictError extends Error {
   code: 'ALREADY_VOTED' | 'VOTE_LIMIT_REACHED';
   constructor(code: 'ALREADY_VOTED' | 'VOTE_LIMIT_REACHED', message?: string) {
@@ -10,7 +18,7 @@ export class ConflictError extends Error {
 
 export class NotFoundError extends Error {}
 
-export async function listIdeasWithVoteFlag(voterIp: string) {
+export async function listIdeasWithVoteFlag(voterIp: string): Promise<IdeaWithFlag[]> {
   const { rows } = await pool.query(
     `SELECT i.id, i.title, i.description, i.vote_count,
             (v.id IS NOT NULL) AS has_voted
@@ -20,10 +28,16 @@ export async function listIdeasWithVoteFlag(voterIp: string) {
    ORDER BY i.vote_count DESC, i.id ASC`,
     [voterIp]
   );
-  return rows.map((r) => ({
-    id: r.id as number,
-    title: r.title as string,
-    description: r.description as string,
+  return rows.map((r: {
+    id: number;
+    title: string;
+    description: string;
+    vote_count: number;
+    has_voted: boolean | null;
+  }) => ({
+    id: r.id,
+    title: r.title,
+    description: r.description,
     voteCount: Number(r.vote_count),
     hasVoted: r.has_voted === true,
   }));
@@ -49,7 +63,7 @@ export async function voteForIdea(ideaId: number, voterIp: string) {
     await client.query('BEGIN');
 
     const idea = await client.query('SELECT 1 FROM ideas WHERE id = $1', [ideaId]);
-    if (idea.rowCount === 0) throw new NotFoundError('Idea not found');
+    if (idea.rows.length === 0) throw new NotFoundError('Idea not found');
 
     // Lock all votes for this IP to avoid race conditions around the 10-vote limit
     await client.query('SELECT id FROM votes WHERE voter_ip = $1::inet FOR UPDATE', [voterIp]);
@@ -58,7 +72,7 @@ export async function voteForIdea(ideaId: number, voterIp: string) {
       'SELECT 1 FROM votes WHERE idea_id = $1 AND voter_ip = $2::inet',
       [ideaId, voterIp]
     );
-    if (already.rowCount > 0) {
+    if (already.rows.length > 0) {
       throw new ConflictError('ALREADY_VOTED', 'Already voted for this idea');
     }
 
@@ -100,13 +114,13 @@ export async function removeVote(ideaId: number, voterIp: string) {
     await client.query('BEGIN');
 
     const idea = await client.query('SELECT 1 FROM ideas WHERE id = $1', [ideaId]);
-    if (idea.rowCount === 0) throw new NotFoundError('Idea not found');
+    if (idea.rows.length === 0) throw new NotFoundError('Idea not found');
 
     const del = await client.query(
       'DELETE FROM votes WHERE idea_id = $1 AND voter_ip = $2::inet RETURNING 1',
       [ideaId, voterIp]
     );
-    if (del.rowCount === 0) {
+    if (del.rows.length === 0) {
       throw new NotFoundError('Vote not found for this IP');
     }
 
@@ -132,4 +146,3 @@ export async function removeVote(ideaId: number, voterIp: string) {
     client.release();
   }
 }
-

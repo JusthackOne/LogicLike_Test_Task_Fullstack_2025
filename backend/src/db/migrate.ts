@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { pool } from './pool.js';
 
 const MIGRATIONS_TABLE = 'migrations';
@@ -17,7 +18,20 @@ export async function migrate() {
     );
     await client.query('COMMIT');
 
-    const migrationsDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), 'migrations');
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    const candidates = [
+      path.resolve(__dirname, 'migrations'), // expected: dist/db/migrations
+      path.resolve(process.cwd(), 'src/db/migrations'), // fallback: use src inside image
+    ];
+    const migrationsDir = candidates.find((p) => fs.existsSync(p));
+    if (!migrationsDir) {
+      throw new Error(
+        `Migrations directory not found. Tried: ${candidates.join(', ')}`
+      );
+    }
+
     const files = fs
       .readdirSync(migrationsDir)
       .filter((f) => f.endsWith('.sql'))
@@ -59,4 +73,3 @@ if (process.argv[1] && process.argv[1].endsWith('migrate.js')) {
       process.exit(1);
     });
 }
-

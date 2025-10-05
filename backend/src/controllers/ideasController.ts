@@ -7,14 +7,15 @@ import {
   listIdeasWithVoteFlag,
   voteForIdea,
   removeVote,
+  IdeaWithFlag,
 } from '../services/voteService.js';
 
 const idParamSchema = z.object({ id: z.string().regex(/^\d+$/).transform(Number) });
 
 export async function getIdeas(req: Request, res: Response) {
   const ip = getClientIp(req);
-  const ideas = await listIdeasWithVoteFlag(ip);
-  const votesUsed = ideas.filter((i) => i.hasVoted).length;
+  const ideas: IdeaWithFlag[] = await listIdeasWithVoteFlag(ip);
+  const votesUsed = ideas.filter((i: IdeaWithFlag) => i.hasVoted).length;
   return res.json({ items: ideas, votesUsed, votesLimit: 10 });
 }
 
@@ -63,4 +64,3 @@ export async function deleteVote(req: Request, res: Response) {
     throw err;
   }
 }
-
