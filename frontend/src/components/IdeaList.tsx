@@ -29,4 +29,3 @@ export default function IdeaList({ ideas, onVote, onUnvote, votesUsed, votesLimi
     </div>
   );
 }
-

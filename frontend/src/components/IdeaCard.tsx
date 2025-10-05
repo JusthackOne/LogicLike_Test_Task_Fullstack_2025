@@ -1,6 +1,7 @@
 import { Idea } from '../types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import VoteButton from './VoteButton';
+import { Spinner } from './ui/spinner';
 
 type Props = {
   idea: Idea;
@@ -20,21 +21,21 @@ export default function IdeaCard({ idea, onVote, onUnvote, disableNewVotes, load
       </CardHeader>
       <CardContent>
         <CardDescription>{idea.description}</CardDescription>
-        <div className="mt-4">
+        <div className="mt-4 flex items-center gap-2">
           <VoteButton
             hasVoted={idea.hasVoted}
-            disabled={!idea.hasVoted && (disableNewVotes || !!offline)}
-            loading={loading}
+            disabled={!idea.hasVoted && (disableNewVotes || !!offline) || !!loading}
             onVote={() => onVote(idea.id)}
             onUnvote={() => onUnvote(idea.id)}
           />
-          {!idea.hasVoted && disableNewVotes && (
-            <div className="mt-1 text-xs text-gray-500">Лимит голосов исчерпан</div>
-          )}
-          {offline && (
-            <div className="mt-1 text-xs text-gray-500">Вы офлайн — действия недоступны</div>
-          )}
+          {loading && <Spinner />}
         </div>
+        {!idea.hasVoted && disableNewVotes && (
+          <div className="mt-1 text-xs text-gray-500">Лимит голосов исчерпан</div>
+        )}
+        {offline && (
+          <div className="mt-1 text-xs text-gray-500">Вы офлайн — действия недоступны</div>
+        )}
       </CardContent>
     </Card>
   );

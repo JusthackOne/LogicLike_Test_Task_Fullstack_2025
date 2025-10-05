@@ -1,5 +1,4 @@
 import { Button } from './ui/button';
-import { Spinner } from './ui/spinner';
 
 type Props = {
   hasVoted: boolean;
@@ -9,29 +8,17 @@ type Props = {
   loading?: boolean;
 };
 
-export default function VoteButton({ hasVoted, disabled, onVote, onUnvote, loading }: Props) {
+export default function VoteButton({ hasVoted, disabled, onVote, onUnvote }: Props) {
   if (hasVoted) {
     return (
-      <Button variant="outline" onClick={onUnvote} disabled={loading || disabled}>
-        {loading ? (
-          <>
-            <Spinner className="mr-2" /> Отзываем...
-          </>
-        ) : (
-          'Отозвать голос'
-        )}
+      <Button variant="outline" onClick={onUnvote} disabled={disabled}>
+        Отозвать голос
       </Button>
     );
   }
   return (
-    <Button onClick={onVote} disabled={loading || disabled}>
-      {loading ? (
-        <>
-          <Spinner className="mr-2" /> Голосуем...
-        </>
-      ) : (
-        'Проголосовать'
-      )}
+    <Button onClick={onVote} disabled={disabled}>
+      Проголосовать
     </Button>
   );
 }

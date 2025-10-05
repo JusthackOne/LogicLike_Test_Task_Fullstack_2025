@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import Header from './components/Header';
 import Loader from './components/Loader';
-import ErrorBanner from './components/ErrorBanner';
 import { apiDelete, apiGet, apiPost } from './api';
 import { Idea, IdeasResponse } from './types';
 import IdeaList from './components/IdeaList';
 import { useOnline } from './hooks/useOnline';
+import { Toast, ToastContainer } from './components/Toast';
 
 export default function App() {
   //!useStates
@@ -14,6 +14,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [votesUsed, setVotesUsed] = useState(0);
   const [loadingById, setLoadingById] = useState<Record<number, boolean>>({});
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const votesLimit = 10;
 
   //!customHooks
@@ -31,7 +32,9 @@ export default function App() {
       setIdeas(data.items);
       setVotesUsed(data.votesUsed);
     } catch (e: any) {
-      setError(e.message || 'Ошибка загрузки');
+      const msg = e?.message || 'Ошибка загрузки';
+      setError(msg);
+      pushToast(msg, 'error');
     } finally {
       setLoading(false);
     }
@@ -52,11 +55,17 @@ export default function App() {
         prev.map((it) => (it.id === id ? { ...it, voteCount: res.voteCount, hasVoted: true } : it))
       );
       setVotesUsed(res.votesUsed);
+      pushToast('Голос учтён', 'success');
     } catch (e: any) {
       const code = e.code as string | undefined;
-      if (code === 'ALREADY_VOTED') setError('Вы уже голосовали за эту идею');
-      else if (code === 'VOTE_LIMIT_REACHED') setError('Лимит в 10 голосов исчерпан');
-      else setError(e.message || 'Ошибка голосования');
+      const msg =
+        code === 'ALREADY_VOTED'
+          ? 'Вы уже голосовали за эту идею'
+          : code === 'VOTE_LIMIT_REACHED'
+          ? 'Лимит в 10 голосов исчерпан'
+          : e?.message || 'Ошибка голосования';
+      setError(msg);
+      pushToast(msg, 'error');
     } finally {
       setLoadingById((m) => ({ ...m, [id]: false }));
     }
@@ -73,19 +82,29 @@ export default function App() {
         prev.map((it) => (it.id === id ? { ...it, voteCount: res.voteCount, hasVoted: false } : it))
       );
       setVotesUsed(res.votesUsed);
+      pushToast('Голос отозван', 'success');
     } catch (e: any) {
-      setError(e.message || 'Ошибка удаления голоса');
+      const msg = e?.message || 'Ошибка удаления голоса';
+      setError(msg);
+      pushToast(msg, 'error');
     } finally {
       setLoadingById((m) => ({ ...m, [id]: false }));
     }
+  }
+
+  function pushToast(message: string, type: Toast['type']) {
+    const id = Date.now() + Math.floor(Math.random() * 1000);
+    setToasts((list) => [...list, { id, type, message }]);
+    setTimeout(() => {
+      setToasts((list) => list.filter((t) => t.id !== id));
+    }, 3500);
   }
 
   if (loading) return <Loader />;
 
   return (
     <div className="mx-auto max-w-4xl p-4">
-      <Header offline={!isOnline} inFlightCount={Object.values(loadingById).filter(Boolean).length} />
-      {error && <ErrorBanner message={error} onClose={() => setError(null)} />}
+      <Header offline={!isOnline} />
       <div className="mb-4 text-sm text-gray-700 dark:text-neutral-300">
         Ваши голоса: {votesUsed}/{votesLimit}
       </div>
@@ -98,16 +117,7 @@ export default function App() {
         loadingById={loadingById}
         offline={!isOnline}
       />
-      {error && (
-        <div className="mt-2">
-          <button
-            className="text-sm text-blue-700 underline hover:text-blue-900 dark:text-blue-300"
-            onClick={() => loadIdeas()}
-          >
-            Повторить загрузку
-          </button>
-        </div>
-      )}
+      <ToastContainer toasts={toasts} onClose={(id) => setToasts((l) => l.filter((t) => t.id !== id))} />
     </div>
   );
 }
