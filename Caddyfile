@@ -1,9 +1,6 @@
-{
-  # Необязательно: email для учётной записи ACME
-  email admin@example.com
+:80 {
+  encode gzip zstd
+  # Проксируем весь трафик во фронтенд‑контейнер (nginx)
+  reverse_proxy frontend:80
 }
 
-:80 {
-encode gzip zstd
-reverse_proxy frontend:80
-}
