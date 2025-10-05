@@ -12,7 +12,7 @@ export function createApp() {
   app.get("/health", (_req, res) => res.json({ ok: true }));
   app.use("/api/ideas", ideasRouter);
 
-  // Global error handler
+  // Глобальный обработчик ошибок
   app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error(err);
     res.status(500).json({ error: "INTERNAL_ERROR" });

@@ -1,0 +1,42 @@
+services:
+  db:
+    # Используем тот же образ/настройки, но порт наружу в проде не публикуем
+    ports: []
+    restart: unless-stopped
+
+  backend:
+    # Только внутренняя сеть; наружу выходим через frontend (nginx) и Caddy
+    ports: []
+    environment:
+      # Укажите публичный домен сайта для CORS (замените на свой)
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://example.com}
+      # При необходимости переопределите доступ к БД через .env в корне репо
+      # DB_USER: ${DB_USER:-app}
+      # DB_PASSWORD: ${DB_PASSWORD:-app}
+      # DB_NAME: ${DB_NAME:-app}
+      # DB_HOST: ${DB_HOST:-db}
+      # Либо укажите DATABASE_URL вместо отдельных переменных DB_*
+      # DATABASE_URL: ${DATABASE_URL:-}
+    restart: unless-stopped
+
+  frontend:
+    # Фронтенд отдаёт статику и внутри проксирует /api на backend
+    ports: []
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    depends_on:
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -89,7 +89,7 @@ export async function voteForIdea(ideaId: number, voterIp: string) {
   } catch (err: any) {
     await client.query("ROLLBACK");
     if (err?.code === "23505") {
-      // unique_violation on (idea_id, voter_ip)
+      // нарушение уникального ограничения (idea_id, voter_ip)
       throw new ConflictError("ALREADY_VOTED", "Already voted for this idea");
     }
     throw err;

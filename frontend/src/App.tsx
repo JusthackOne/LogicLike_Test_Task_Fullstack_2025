@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import Header from "./components/Header";
-import Loader from "./components/Loader";
-import ErrorBanner from "./components/ErrorBanner";
-import { apiDelete, apiGet, apiPost } from "./api";
-import { Idea, IdeasResponse } from "./types";
-import IdeaList from "./components/IdeaList";
+import { useEffect, useMemo, useState } from 'react';
+import Header from './components/Header';
+import Loader from './components/Loader';
+import ErrorBanner from './components/ErrorBanner';
+import { apiDelete, apiGet, apiPost } from './api';
+import { Idea, IdeasResponse } from './types';
+import IdeaList from './components/IdeaList';
+import { useOnline } from './hooks/useOnline';
 
 export default function App() {
   //!useStates
@@ -12,50 +13,70 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [votesUsed, setVotesUsed] = useState(0);
+  const [loadingById, setLoadingById] = useState<Record<number, boolean>>({});
   const votesLimit = 10;
 
   //!customHooks
+  const isOnline = useOnline();
   const sortedIdeas = useMemo(() => {
     return [...ideas].sort((a, b) => b.voteCount - a.voteCount || a.id - b.id);
   }, [ideas]);
 
   //!useEffects
+  async function loadIdeas() {
+    try {
+      setError(null);
+      setLoading(true);
+      const data = await apiGet<IdeasResponse>('/ideas');
+      setIdeas(data.items);
+      setVotesUsed(data.votesUsed);
+    } catch (e: any) {
+      setError(e.message || 'Ошибка загрузки');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    (async () => {
-      try {
-        const data = await apiGet<IdeasResponse>("/ideas");
-        setIdeas(data.items);
-        setVotesUsed(data.votesUsed);
-      } catch (e: any) {
-        setError(e.message || "Ошибка загрузки");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    loadIdeas();
   }, []);
 
   async function handleVote(id: number) {
     try {
       setError(null);
-      const res = await apiPost<{ id: number; voteCount: number; votesUsed: number }>(`/ideas/${id}/vote`);
-      setIdeas((prev) => prev.map((it) => (it.id === id ? { ...it, voteCount: res.voteCount, hasVoted: true } : it)));
+      setLoadingById((m) => ({ ...m, [id]: true }));
+      const res = await apiPost<{ id: number; voteCount: number; votesUsed: number }>(
+        `/ideas/${id}/vote`
+      );
+      setIdeas((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, voteCount: res.voteCount, hasVoted: true } : it))
+      );
       setVotesUsed(res.votesUsed);
     } catch (e: any) {
       const code = e.code as string | undefined;
-      if (code === "ALREADY_VOTED") setError("Вы уже голосовали за эту идею");
-      else if (code === "VOTE_LIMIT_REACHED") setError("Лимит в 10 голосов исчерпан");
-      else setError(e.message || "Ошибка голосования");
+      if (code === 'ALREADY_VOTED') setError('Вы уже голосовали за эту идею');
+      else if (code === 'VOTE_LIMIT_REACHED') setError('Лимит в 10 голосов исчерпан');
+      else setError(e.message || 'Ошибка голосования');
+    } finally {
+      setLoadingById((m) => ({ ...m, [id]: false }));
     }
   }
 
   async function handleUnvote(id: number) {
     try {
       setError(null);
-      const res = await apiDelete<{ id: number; voteCount: number; votesUsed: number }>(`/ideas/${id}/vote`);
-      setIdeas((prev) => prev.map((it) => (it.id === id ? { ...it, voteCount: res.voteCount, hasVoted: false } : it)));
+      setLoadingById((m) => ({ ...m, [id]: true }));
+      const res = await apiDelete<{ id: number; voteCount: number; votesUsed: number }>(
+        `/ideas/${id}/vote`
+      );
+      setIdeas((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, voteCount: res.voteCount, hasVoted: false } : it))
+      );
       setVotesUsed(res.votesUsed);
     } catch (e: any) {
-      setError(e.message || "Ошибка удаления голоса");
+      setError(e.message || 'Ошибка удаления голоса');
+    } finally {
+      setLoadingById((m) => ({ ...m, [id]: false }));
     }
   }
 
@@ -63,8 +84,8 @@ export default function App() {
 
   return (
     <div className="mx-auto max-w-4xl p-4">
-      <Header />
-      {error && <ErrorBanner message={error} />}
+      <Header offline={!isOnline} inFlightCount={Object.values(loadingById).filter(Boolean).length} />
+      {error && <ErrorBanner message={error} onClose={() => setError(null)} />}
       <div className="mb-4 text-sm text-gray-700 dark:text-neutral-300">
         Ваши голоса: {votesUsed}/{votesLimit}
       </div>
@@ -74,7 +95,20 @@ export default function App() {
         onUnvote={handleUnvote}
         votesUsed={votesUsed}
         votesLimit={votesLimit}
+        loadingById={loadingById}
+        offline={!isOnline}
       />
+      {error && (
+        <div className="mt-2">
+          <button
+            className="text-sm text-blue-700 underline hover:text-blue-900 dark:text-blue-300"
+            onClick={() => loadIdeas()}
+          >
+            Повторить загрузку
+          </button>
+        </div>
+      )}
     </div>
   );
 }
+
