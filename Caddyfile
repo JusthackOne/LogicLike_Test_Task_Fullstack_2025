@@ -3,17 +3,7 @@
   email admin@example.com
 }
 
-# Замените example.com на ваш реальный домен
-example.com, www.example.com {
-  encode gzip zstd
-
-  # Проксируем весь трафик во фронтенд‑контейнер (nginx)
-  reverse_proxy frontend:80
-
-  # При желании можно проксировать /api напрямую на backend, без лишнего хопа:
-  # @api path /api/*
-  # reverse_proxy @api backend:4000
-  # handle /* {
-  #   reverse_proxy frontend:80
-  # }
+:80 {
+encode gzip zstd
+reverse_proxy frontend:80
 }
