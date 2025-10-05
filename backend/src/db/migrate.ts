@@ -1,14 +1,14 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { pool } from './pool.js';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { pool } from "./pool.js";
 
-const MIGRATIONS_TABLE = 'migrations';
+const MIGRATIONS_TABLE = "migrations";
 
 export async function migrate() {
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
     await client.query(
       `CREATE TABLE IF NOT EXISTS ${MIGRATIONS_TABLE} (
         id SERIAL PRIMARY KEY,
@@ -16,41 +16,36 @@ export async function migrate() {
         run_on TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`
     );
-    await client.query('COMMIT');
+    await client.query("COMMIT");
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
 
-    const candidates = [
-      path.resolve(__dirname, 'migrations'), // expected: dist/db/migrations
-      path.resolve(process.cwd(), 'src/db/migrations'), // fallback: use src inside image
-    ];
+    const candidates = [path.resolve(__dirname, "migrations"), path.resolve(process.cwd(), "src/db/migrations")];
     const migrationsDir = candidates.find((p) => fs.existsSync(p));
     if (!migrationsDir) {
-      throw new Error(
-        `Migrations directory not found. Tried: ${candidates.join(', ')}`
-      );
+      throw new Error(`Migrations directory not found. Tried: ${candidates.join(", ")}`);
     }
 
     const files = fs
       .readdirSync(migrationsDir)
-      .filter((f) => f.endsWith('.sql'))
+      .filter((f) => f.endsWith(".sql"))
       .sort();
 
     for (const file of files) {
       const { rows } = await pool.query(`SELECT 1 FROM ${MIGRATIONS_TABLE} WHERE name = $1`, [file]);
       if (rows.length > 0) continue;
-      const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
+      const sql = fs.readFileSync(path.join(migrationsDir, file), "utf-8");
       const client2 = await pool.connect();
       try {
-        await client2.query('BEGIN');
+        await client2.query("BEGIN");
         await client2.query(sql);
         await client2.query(`INSERT INTO ${MIGRATIONS_TABLE}(name) VALUES ($1)`, [file]);
-        await client2.query('COMMIT');
+        await client2.query("COMMIT");
         // eslint-disable-next-line no-console
         console.log(`Applied migration: ${file}`);
       } catch (e) {
-        await client2.query('ROLLBACK');
+        await client2.query("ROLLBACK");
         throw e;
       } finally {
         client2.release();
@@ -61,11 +56,11 @@ export async function migrate() {
   }
 }
 
-if (process.argv[1] && process.argv[1].endsWith('migrate.js')) {
+if (process.argv[1] && process.argv[1].endsWith("migrate.js")) {
   migrate()
     .then(() => {
       // eslint-disable-next-line no-console
-      console.log('Migrations complete');
+      console.log("Migrations complete");
       return pool.end();
     })
     .catch((err) => {

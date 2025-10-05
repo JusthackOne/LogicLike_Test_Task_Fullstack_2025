@@ -11,4 +11,3 @@ export type IdeasResponse = {
   votesUsed: number;
   votesLimit: number;
 };
-

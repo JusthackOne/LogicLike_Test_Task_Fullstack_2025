@@ -1,5 +1,5 @@
-import { Idea } from '../types';
-import IdeaCard from './IdeaCard';
+import { Idea } from "../types";
+import IdeaCard from "./IdeaCard";
 
 type Props = {
   ideas: Idea[];
@@ -14,15 +14,8 @@ export default function IdeaList({ ideas, onVote, onUnvote, votesUsed, votesLimi
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {ideas.map((idea) => (
-        <IdeaCard
-          key={idea.id}
-          idea={idea}
-          onVote={onVote}
-          onUnvote={onUnvote}
-          disableNewVotes={disableNewVotes}
-        />)
-      )}
+        <IdeaCard key={idea.id} idea={idea} onVote={onVote} onUnvote={onUnvote} disableNewVotes={disableNewVotes} />
+      ))}
     </div>
   );
 }
-

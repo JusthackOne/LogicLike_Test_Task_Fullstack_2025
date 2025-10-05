@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api";
 
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`);
@@ -7,7 +7,7 @@ export async function apiGet<T>(path: string): Promise<T> {
 }
 
 export async function apiPost<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { method: 'POST' });
+  const res = await fetch(`${API_BASE}${path}`, { method: "POST" });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = data?.message || `Request failed: ${res.status}`;
@@ -20,7 +20,7 @@ export async function apiPost<T>(path: string): Promise<T> {
 }
 
 export async function apiDelete<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE' });
+  const res = await fetch(`${API_BASE}${path}`, { method: "DELETE" });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = data?.message || `Request failed: ${res.status}`;
@@ -31,4 +31,3 @@ export async function apiDelete<T>(path: string): Promise<T> {
   }
   return data;
 }
-

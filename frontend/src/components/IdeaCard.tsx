@@ -1,6 +1,6 @@
-import { Idea } from '../types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import VoteButton from './VoteButton';
+import { Idea } from "../types";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import VoteButton from "./VoteButton";
 
 type Props = {
   idea: Idea;
@@ -33,4 +33,3 @@ export default function IdeaCard({ idea, onVote, onUnvote, disableNewVotes }: Pr
     </Card>
   );
 }
-

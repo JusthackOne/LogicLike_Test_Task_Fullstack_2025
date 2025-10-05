@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
-import { z } from 'zod';
-import { getClientIp } from '../utils/ip.js';
+import { Request, Response } from "express";
+import { z } from "zod";
+import { getClientIp } from "../utils/ip.js";
 import {
   ConflictError,
   NotFoundError,
@@ -8,7 +8,7 @@ import {
   voteForIdea,
   removeVote,
   IdeaWithFlag,
-} from '../services/voteService.js';
+} from "../services/voteService.js";
 
 const idParamSchema = z.object({ id: z.string().regex(/^\d+$/).transform(Number) });
 
@@ -39,7 +39,7 @@ export async function postVote(req: Request, res: Response) {
       });
     }
     if (err instanceof NotFoundError) {
-      return res.status(404).json({ error: 'NOT_FOUND', message: err.message });
+      return res.status(404).json({ error: "NOT_FOUND", message: err.message });
     }
     throw err;
   }
@@ -59,7 +59,7 @@ export async function deleteVote(req: Request, res: Response) {
     });
   } catch (err: any) {
     if (err instanceof NotFoundError) {
-      return res.status(404).json({ error: 'NOT_FOUND', message: err.message });
+      return res.status(404).json({ error: "NOT_FOUND", message: err.message });
     }
     throw err;
   }

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import Header from './components/Header';
-import Loader from './components/Loader';
-import ErrorBanner from './components/ErrorBanner';
-import { apiDelete, apiGet, apiPost } from './api';
-import { Idea, IdeasResponse } from './types';
-import IdeaList from './components/IdeaList';
+import { useEffect, useMemo, useState } from "react";
+import Header from "./components/Header";
+import Loader from "./components/Loader";
+import ErrorBanner from "./components/ErrorBanner";
+import { apiDelete, apiGet, apiPost } from "./api";
+import { Idea, IdeasResponse } from "./types";
+import IdeaList from "./components/IdeaList";
 
 export default function App() {
   //!useStates
@@ -23,11 +23,11 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await apiGet<IdeasResponse>('/ideas');
+        const data = await apiGet<IdeasResponse>("/ideas");
         setIdeas(data.items);
         setVotesUsed(data.votesUsed);
       } catch (e: any) {
-        setError(e.message || 'Ошибка загрузки');
+        setError(e.message || "Ошибка загрузки");
       } finally {
         setLoading(false);
       }
@@ -37,33 +37,25 @@ export default function App() {
   async function handleVote(id: number) {
     try {
       setError(null);
-      const res = await apiPost<{ id: number; voteCount: number; votesUsed: number }>(
-        `/ideas/${id}/vote`
-      );
-      setIdeas((prev) =>
-        prev.map((it) => (it.id === id ? { ...it, voteCount: res.voteCount, hasVoted: true } : it))
-      );
+      const res = await apiPost<{ id: number; voteCount: number; votesUsed: number }>(`/ideas/${id}/vote`);
+      setIdeas((prev) => prev.map((it) => (it.id === id ? { ...it, voteCount: res.voteCount, hasVoted: true } : it)));
       setVotesUsed(res.votesUsed);
     } catch (e: any) {
       const code = e.code as string | undefined;
-      if (code === 'ALREADY_VOTED') setError('Вы уже голосовали за эту идею');
-      else if (code === 'VOTE_LIMIT_REACHED') setError('Лимит в 10 голосов исчерпан');
-      else setError(e.message || 'Ошибка голосования');
+      if (code === "ALREADY_VOTED") setError("Вы уже голосовали за эту идею");
+      else if (code === "VOTE_LIMIT_REACHED") setError("Лимит в 10 голосов исчерпан");
+      else setError(e.message || "Ошибка голосования");
     }
   }
 
   async function handleUnvote(id: number) {
     try {
       setError(null);
-      const res = await apiDelete<{ id: number; voteCount: number; votesUsed: number }>(
-        `/ideas/${id}/vote`
-      );
-      setIdeas((prev) =>
-        prev.map((it) => (it.id === id ? { ...it, voteCount: res.voteCount, hasVoted: false } : it))
-      );
+      const res = await apiDelete<{ id: number; voteCount: number; votesUsed: number }>(`/ideas/${id}/vote`);
+      setIdeas((prev) => prev.map((it) => (it.id === id ? { ...it, voteCount: res.voteCount, hasVoted: false } : it)));
       setVotesUsed(res.votesUsed);
     } catch (e: any) {
-      setError(e.message || 'Ошибка удаления голоса');
+      setError(e.message || "Ошибка удаления голоса");
     }
   }
 
@@ -86,4 +78,3 @@ export default function App() {
     </div>
   );
 }
-

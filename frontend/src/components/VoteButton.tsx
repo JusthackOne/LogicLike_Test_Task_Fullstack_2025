@@ -1,4 +1,4 @@
-import { Button } from './ui/button';
+import { Button } from "./ui/button";
 
 type Props = {
   hasVoted: boolean;
@@ -21,4 +21,3 @@ export default function VoteButton({ hasVoted, disabled, onVote, onUnvote }: Pro
     </Button>
   );
 }
-

@@ -1,7 +1,7 @@
-import { createServer } from 'http';
-import { createApp } from './app.js';
-import { config } from './config.js';
-import { migrate } from './db/migrate.js';
+import { createServer } from "http";
+import { createApp } from "./app.js";
+import { config } from "./config.js";
+import { migrate } from "./db/migrate.js";
 
 async function main() {
   await migrate();
@@ -16,4 +16,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-
